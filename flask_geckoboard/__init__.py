@@ -43,9 +43,13 @@ To use encryption, first set a ``GECKOBOARD_PASSWORD`` in the Flask config.
 Next, enable encryption for each widget using the decorator arguments::
 
     from flask import Flask
-    app = Flask(__name__)
+    from flask_geckoboard import Geckoboard
 
-    @number_widget(encrypted=True)
+    app = Flask(__name__)
+    geckoboard = Geckoboard(app)
+
+    @app.route('/user-count')
+    @geckoboard.number(encrypted=True)
     def user_count(request):
         return User.objects.count()
 
@@ -64,29 +68,25 @@ number of number of comments posted today.  First create a view, using a
 flask-geckoboard decorator::
 
     from datetime import date, time, datetime
-    from app.db.models import Comment
-    from flask_geckoboard.decorators import number_widget
 
-    @app.route('/gecko/comment/count')
-    @number_widget
+    from flask import Flask
+    from flask_geckoboard import Geckoboard
+
+    app = Flask(__name__)
+    geckoboard = Geckoboard(app)
+
+    @app.route('/comment-count')
+    @geckoboard.number
     def comment_count():
         midnight = datetime.combine(date.today(), time.min)
         return Comment.objects.filter(submit_date__gte=midnight).count()
-
-You can also specify the output format of the widget as either JSON or XML::
-
-   @app.route('/gecko/comment/count')
-   @number_widget(format='json')
-   def comment_count(request):
-        midnight = datatime.combine(date.today(), time.min)
-        return Comment.objects.filter(submit_data__get=midnight).count()
 
 
 If your widget has optional settings, you can pass them in the decorator
 definition::
 
     @app.route('/gecko/comment/count-absolute')
-    @number_widget(absolute='true')
+    @geckoboard.number(absolute='true')
     def comment_count(request):
         midnight = datetime.combine(date.today(), time.min)
         return Comment.objects.filter(submit_date__gte=midnight).count()
@@ -124,7 +124,7 @@ The following decorators are available from the
 ``flask_geckoboard.decorators`` module:
 
 
-``number_widget``
+``number``
 -----------------
 
 Render a *Number & Secondary Stat* widget.
@@ -137,18 +137,16 @@ If there is only one parameter you do not need to return it in a tuple.
 For example, to render a widget that shows the number of users and the
 difference from last week::
 
-    from flask_geckoboard.decorators import number_widget
     from datetime import datetime, timedelta
-    from django.contrib.auth.models import User
 
-    @number_widget
+    @geckoboard.number
     def user_count(request):
         last_week = datetime.now() - timedelta(weeks=1)
         users = User.objects
         last_week_users = users.filter(date_joined__lt=last_week)
         return (users.count(), last_week_users.count())
 
-    @number_widget
+    @geckoboard.number
     def users_count_with_prefix(request):
         last_week = datetime.now() - timedelta(weeks=1)
         users = User.objects
@@ -156,7 +154,7 @@ difference from last week::
         return (users.count(), last_week_users.count(), '$')
 
 
-``rag_widget``
+``rag``
 --------------
 
 Render a *RAG Column & Numbers* or *RAG Numbers* widget.
@@ -169,11 +167,9 @@ displayed next to the respective values in the dashboard.
 For example, to render a widget that shows the number of comments that
 were approved or deleted by moderators in the last 24 hours::
 
-    from flask_geckoboard.decorators import rag_widget
     from datetime import datetime, timedelta
-    from django.contrib.comments.models import Comment, CommentFlag
 
-    @rag_widget
+    @geckoboard.rag
     def comments(request):
         start_time = datetime.now() - timedelta(hours=24)
         comments = Comment.objects.filter(submit_date__gt=start_time)
@@ -190,7 +186,7 @@ were approved or deleted by moderators in the last 24 hours::
         )
 
 
-``text_widget``
+``text``
 ---------------
 
 Render a *Text* widget.
@@ -206,10 +202,9 @@ without enclosing it in a list and tuple.
 For example, to render a widget showing the latest Geckoboard twitter
 updates, using Mike Verdone's `Twitter library`_::
 
-    from flask_geckoboard.decorators import text_widget, TEXT_NONE
     import twitter
 
-    @text_widget
+    @geckoboard.text
     def twitter_status(request):
         twitter = twitter.Api()
         updates = twitter.GetUserTimeline('geckoboard')
@@ -230,10 +225,7 @@ representing red, green, blue and optionally transparency.
 For example, to render a widget showing the number of normal, staff and
 superusers::
 
-    from flask_geckoboard.decorators import pie_chart
-    from django.contrib.auth.models import User
-
-    @pie_chart
+    @geckoboard.pie_chart
     def user_types(request):
         users = User.objects.filter(is_active=True)
         total_count = users.count()
@@ -265,11 +257,9 @@ transparency.
 For example, to render a widget showing the number of comments per day
 over the last four weeks (including today)::
 
-    from flask_geckoboard.decorators import line_chart
     from datetime import date, timedelta
-    from django.contrib.comments.models import Comment
 
-    @line_chart
+    @geckoboard.line_chart
     def comment_trend(request):
         since = date.today() - timedelta(days=29)
         days = dict((since + timedelta(days=d), 0)
@@ -298,11 +288,9 @@ be displayed next to the minimum or maximum value.
 For example, to render a widget showing the number of users that have
 logged in in the last 24 hours::
 
-    from flask_geckoboard.decorators import geck_o_meter
     from datetime import datetime, timedelta
-    from django.contrib.auth.models import User
 
-    @geck_o_meter
+    @geckoboard.geck_o_meter
     def login_count(request):
         since = datetime.now() - timedelta(hours=24)
         users = User.objects.filter(is_active=True)
@@ -320,10 +308,7 @@ The decorated view must return a dictionary with at least an *items*
 key.  To render a funnel showing the breakdown of authenticated users
 vs. anonymous users::
 
-    from flask_geckoboard.decorators import funnel
-    from django.contrib.auth.models import User
-
-    @funnel
+    @geckoboard.funnel
     def user_breakdown(request):
         all_users = User.objects
         active_users =all_users.filter(is_active=True)
@@ -354,9 +339,7 @@ The decorated view must return a dictionary with at least keys *label*,
 at
 http://support.geckoboard.com/entries/274940-custom-chart-widget-type-definitions::
 
-    from flask_geckoboard.decorators import bullet
-
-    @bullet
+    @geckoboard.bullet
     def geckoboard_bullet_example(request):
         return = {
             'label': 'Revenue 2011 YTD',
@@ -383,9 +366,9 @@ class Geckoboard(object):
     geck_o_meter = decorators.geck_o_meter
     line_chart = decorators.line_chart
     pie_chart = decorators.pie_chart
-    text_widget = decorators.text_widget
-    rag_widget = decorators.rag_widget
-    number_widget = decorators.number_widget
+    text = decorators.text_widget
+    rag = decorators.rag_widget
+    number = decorators.number_widget
 
     def __init__(self, app=None):
         if app:
