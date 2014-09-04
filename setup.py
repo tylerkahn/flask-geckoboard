@@ -44,5 +44,4 @@ setup(
     platforms = ['any'],
     url = 'http://github.com/PolymathVentures/flask-geckoboard',
     download_url = 'http://github.com/PolymathVentures/flask-geckoboard/archives/master',
-    cmdclass = cmdclass,
 )
