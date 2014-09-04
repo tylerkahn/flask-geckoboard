@@ -30,7 +30,7 @@ From `django-geckoboard`_:
 * Jeremy A. Johnson
 * Rob Hudson
 
-Copyright (C) 2011-2014 Rob Eroh  <rob@eroh.me> and others.
+Copyright (C) 2011-2014 Rob Eroh  <rob|at|eroh|dot|me> and others.
 This software is licensed under the MIT License (see LICENSE.txt).
 
 Thanks go to Geckoboard for their support, and to GitHub for hosting the
