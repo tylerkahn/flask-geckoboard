@@ -5,7 +5,6 @@ Geckoboard decorators.
 import base64
 import json
 from types import ListType, TupleType
-from xml.dom.minidom import Document
 
 try:
     from Crypto.Cipher import AES
@@ -442,8 +441,7 @@ def _is_api_key_correct():
     auth = request.authorization
     if auth:
         if auth.type == 'basic':
-            request_key = base64.b64decode(auth.username).split(':')[0]
-            return request_key == api_key
+            return auth.username == api_key and auth.password == 'X'
     return False
 
 def _derive_key_and_iv(password, salt, key_length, iv_length):
@@ -456,7 +454,7 @@ def _derive_key_and_iv(password, salt, key_length, iv_length):
 def _encrypt(data):
     """Equivalent to OpenSSL using 256 bit AES in CBC mode"""
     BS = AES.block_size
-    pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS) 
+    pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS)
     password = app.config.get('GECKOBOARD_PASSWORD')
     salt = Random.new().read(BS - len('Salted__'))
     key, iv = _derive_key_and_iv(password, salt, 32, BS)
@@ -473,53 +471,13 @@ def _render(data, encrypted, format=None):
     A `format` paramater of ``json`` or ``2`` renders JSON output, any
     other value renders XML.
     """
-    format = request.args.get('format', '')
-    if format == 'json' or format == '2':
-        return _render_json(data, encrypted)
-    else:
-        return _render_xml(data, encrypted)
+    return _render_json(data, encrypted)
 
 def _render_json(data, encrypted=False):
     data_json = json.dumps(data)
     if encrypted:
         data_json = _encrypt(data_json)
     return data_json, 'application/json'
-
-def _render_xml(data, encrypted=False):
-    if encrypted:
-        raise ValueError("encryption requested for XML output but unsupported")
-    doc = Document()
-    root = doc.createElement('root')
-    doc.appendChild(root)
-    _build_xml(doc, root, data)
-    return doc.toxml(), 'application/xml'
-
-def _build_xml(doc, parent, data):
-    if isinstance(data, (tuple, list)):
-        _build_list_xml(doc, parent, data)
-    elif isinstance(data, dict):
-        _build_dict_xml(doc, parent, data)
-    else:
-        _build_str_xml(doc, parent, data)
-
-def _build_str_xml(doc, parent, data):
-    parent.appendChild(doc.createTextNode(unicode(data)))
-
-def _build_list_xml(doc, parent, data):
-    for item in data:
-        _build_xml(doc, parent, item)
-
-def _build_dict_xml(doc, parent, data):
-    for tag, item in data.items():
-        if isinstance(item, (list, tuple)):
-            for subitem in item:
-                elem = doc.createElement(tag)
-                _build_xml(doc, elem, subitem)
-                parent.appendChild(elem)
-        else:
-            elem = doc.createElement(tag)
-            _build_xml(doc, elem, item)
-            parent.appendChild(elem)
 
 
 class GeckoboardException(Exception):
