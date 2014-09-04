@@ -1,24 +1,23 @@
 """
 =================
-django-geckoboard
+flask-geckoboard
 =================
 
 Geckoboard_ is a hosted, real-time status board serving up indicators
 from web analytics, CRM, support, infrastructure, project management,
 sales, etc.  It can be connected to virtually any source of quantitative
-data.  This Django_ application provides view decorators to help create
+data.  This Flask_ plugin provides view decorators to help create
 custom widgets.
 
 .. _Geckoboard: http://www.geckoboard.com/
-.. _Django: http://www.djangoproject.com/
+.. _Flask: http://flask.pocoo.org/
 
 
 Installation
 ============
 
-To install django-geckoboard, simply place the ``django_geckoboard``
-package somewhere on the Python path.  You do not need to add it to the
-``INSTALLED_APPS`` list, unless you want to run the tests.
+To install flask-geckoboard, simply place the ``flask_geckoboard``
+package somewhere on the Python path.
 
 
 Limiting access
@@ -26,9 +25,7 @@ Limiting access
 
 If you want to protect the data you send to Geckoboard from access by
 others, you can use an API key shared by Geckoboard and your widget
-views.  Set ``GECKOBOARD_API_KEY`` in the project ``settings.py`` file::
-
-    GECKOBOARD_API_KEY = 'XXXXXXXXX'
+views.  Set ``GECKOBOARD_API_KEY`` in the Flask config.
 
 If you do not set an API key, anyone will be able to view the data by
 visiting the widget URL.
@@ -41,41 +38,44 @@ Geckoboard encryption allows encrypting data before it is sent to Geckoboard's
 servers. After entering the password used to encrypt the data when the Geckoboard
 is loaded, the data will be decrypted in the browser.
 
-To use encryption, first set a password in the project ``settings.py`` file::
+To use encryption, first set a ``GECKOBOARD_PASSWORD`` in the Flask config.
 
-    GECKOBOARD_PASSWORD = 'XXXXXXXXX'
-    
 Next, enable encryption for each widget using the decorator arguments::
 
+    from flask import Flask
+    app = Flask(__name__)
+
     @number_widget(encrypted=True)
-        def user_count(request):
-            return User.objects.count()
+    def user_count(request):
+        return User.objects.count()
 
 
 Creating custom widgets
 =======================
 
 The available custom widgets are described in the Geckoboard support
-section, under `Geckoboard API`_.  From the perspective of a Django
-project, a custom widget is just a view.  The django-geckoboard
+section, under `Geckoboard API`_.  From the perspective of a Flask
+project, a custom widget is just a view.  The flask-geckoboard
 application provides view decorators that render the correct response
 for the different widgets.
 
 Let's say you want to add a widget to your dashboard that shows the
 number of number of comments posted today.  First create a view, using a
-django-geckoboard decorator::
+flask-geckoboard decorator::
 
     from datetime import date, time, datetime
-    from django.contrib.comments.models import Comment
-    from django_geckoboard.decorators import number_widget
+    from app.db.models import Comment
+    from flask_geckoboard.decorators import number_widget
 
+    @app.route('/gecko/comment/count')
     @number_widget
-    def comment_count(request):
+    def comment_count():
         midnight = datetime.combine(date.today(), time.min)
         return Comment.objects.filter(submit_date__gte=midnight).count()
 
 You can also specify the output format of the widget as either JSON or XML::
 
+   @app.route('/gecko/comment/count')
    @number_widget(format='json')
    def comment_count(request):
         midnight = datatime.combine(date.today(), time.min)
@@ -85,28 +85,20 @@ You can also specify the output format of the widget as either JSON or XML::
 If your widget has optional settings, you can pass them in the decorator
 definition::
 
+    @app.route('/gecko/comment/count-absolute')
     @number_widget(absolute='true')
     def comment_count(request):
         midnight = datetime.combine(date.today(), time.min)
         return Comment.objects.filter(submit_date__gte=midnight).count()
 
 
-Then use a URLconf module to map a URL to the view::
-
-    from django.conf.urls.defaults import *
-
-    urlpatterns = patterns('YOUR_VIEW_MODULE',
-        ...
-        (r'^geckoboard/comment_count/$', 'comment_count'),
-    )
-
-This is all the Django code you need to display the comment count on
+This is all the Flask code you need to display the comment count on
 your dashboard. When you create a custom widget in Geckoboard, enter the
 following information:
 
 Encryption
     Enable if the field is encrypted (see instructions above).
-    
+
 URL data feed
     The view URL.  In the example above this would be something like
     ``http://HOSTNAME/geckoboard/comment_count/``.
@@ -129,7 +121,7 @@ Request type
 
 
 The following decorators are available from the
-``django_geckoboard.decorators`` module:
+``flask_geckoboard.decorators`` module:
 
 
 ``number_widget``
@@ -145,7 +137,7 @@ If there is only one parameter you do not need to return it in a tuple.
 For example, to render a widget that shows the number of users and the
 difference from last week::
 
-    from django_geckoboard.decorators import number_widget
+    from flask_geckoboard.decorators import number_widget
     from datetime import datetime, timedelta
     from django.contrib.auth.models import User
 
@@ -177,7 +169,7 @@ displayed next to the respective values in the dashboard.
 For example, to render a widget that shows the number of comments that
 were approved or deleted by moderators in the last 24 hours::
 
-    from django_geckoboard.decorators import rag_widget
+    from flask_geckoboard.decorators import rag_widget
     from datetime import datetime, timedelta
     from django.contrib.comments.models import Comment, CommentFlag
 
@@ -214,7 +206,7 @@ without enclosing it in a list and tuple.
 For example, to render a widget showing the latest Geckoboard twitter
 updates, using Mike Verdone's `Twitter library`_::
 
-    from django_geckoboard.decorators import text_widget, TEXT_NONE
+    from flask_geckoboard.decorators import text_widget, TEXT_NONE
     import twitter
 
     @text_widget
@@ -238,7 +230,7 @@ representing red, green, blue and optionally transparency.
 For example, to render a widget showing the number of normal, staff and
 superusers::
 
-    from django_geckoboard.decorators import pie_chart
+    from flask_geckoboard.decorators import pie_chart
     from django.contrib.auth.models import User
 
     @pie_chart
@@ -273,7 +265,7 @@ transparency.
 For example, to render a widget showing the number of comments per day
 over the last four weeks (including today)::
 
-    from django_geckoboard.decorators import line_chart
+    from flask_geckoboard.decorators import line_chart
     from datetime import date, timedelta
     from django.contrib.comments.models import Comment
 
@@ -306,7 +298,7 @@ be displayed next to the minimum or maximum value.
 For example, to render a widget showing the number of users that have
 logged in in the last 24 hours::
 
-    from django_geckoboard.decorators import geck_o_meter
+    from flask_geckoboard.decorators import geck_o_meter
     from datetime import datetime, timedelta
     from django.contrib.auth.models import User
 
@@ -328,7 +320,7 @@ The decorated view must return a dictionary with at least an *items*
 key.  To render a funnel showing the breakdown of authenticated users
 vs. anonymous users::
 
-    from django_geckoboard.decorators import funnel
+    from flask_geckoboard.decorators import funnel
     from django.contrib.auth.models import User
 
     @funnel
@@ -362,7 +354,7 @@ The decorated view must return a dictionary with at least keys *label*,
 at
 http://support.geckoboard.com/entries/274940-custom-chart-widget-type-definitions::
 
-    from django_geckoboard.decorators import bullet
+    from flask_geckoboard.decorators import bullet
 
     @bullet
     def geckoboard_bullet_example(request):
@@ -382,8 +374,33 @@ http://support.geckoboard.com/entries/274940-custom-chart-widget-type-definition
 .. _`Geckoboard API`: http://geckoboard.zendesk.com/forums/207979-geckoboard-api
 """
 
-__author__ = "Joost Cassee"
-__email__ = "joost@cassee.net"
-__version__ = "1.2.7"
-__copyright__ = "Copyright (C) 2011-2013 Joost Cassee and others"
+import decorators
+
+class Geckoboard(object):
+    app = None
+    bullet = decorators.bullet
+    funnel = decorators.funnel
+    geck_o_meter = decorators.geck_o_meter
+    line_chart = decorators.line_chart
+    pie_chart = decorators.pie_chart
+    text_widget = decorators.text_widget
+    rag_widget = decorators.rag_widget
+    number_widget = decorators.number_widget
+
+    def __init__(self, app=None):
+        if app:
+            self.init_app(app)
+
+    def init_app(self, app):
+        self.api_key = app.config.get('GECKOBOARD_API_KEY')
+        self.password = app.config.get('GECKOBOARD_PASSWORD')
+        self.app = app
+
+
+
+
+__author__ = "Rob Eroh"
+__email__ = "rob@eroh.me"
+__version__ = "0.1.0"
+__copyright__ = "Copyright (C) 2011-2014 Rob Eroh and others"
 __license__ = "MIT License"

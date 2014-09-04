@@ -2,15 +2,18 @@
 Tests for the Geckoboard decorators.
 """
 
-import simplejson
-from django.http import HttpRequest, HttpResponseForbidden
-from django.utils.datastructures import SortedDict
+import json
+import base64
 
-from django_geckoboard.decorators import widget, number_widget, rag_widget, \
+from collections import OrderedDict
+
+from django.http import HttpRequest, HttpResponseForbidden
+
+from flask_geckoboard.decorators import widget, number_widget, rag_widget, \
         text_widget, pie_chart, line_chart, geck_o_meter, TEXT_NONE, \
         TEXT_INFO, TEXT_WARN, funnel, bullet
-from django_geckoboard.tests.utils import TestCase
-import base64
+
+from utils import TestCase
 
 
 class WidgetDecoratorTestCase(TestCase):
@@ -122,13 +125,13 @@ class WidgetDecoratorTestCase(TestCase):
         self.assertEqual('"test"', resp.content)
 
     def test_dict_xml(self):
-        resp = widget(lambda r: SortedDict([('a', 1),
+        resp = widget(lambda r: OrderedDict([('a', 1),
                 ('b', 2)]))(self.xml_request)
         self.assertEqual('<?xml version="1.0" ?><root><a>1</a><b>2</b></root>',
                 resp.content)
 
     def test_dict_json(self):
-        resp = widget(lambda r: SortedDict([('a', 1),
+        resp = widget(lambda r: OrderedDict([('a', 1),
                 ('b', 2)]))(self.json_request)
         self.assertEqual('{"a": 1, "b": 2}', resp.content)
 
@@ -150,8 +153,8 @@ class WidgetDecoratorTestCase(TestCase):
                 resp.content)
 
     def test_dict_list_json(self):
-        resp = widget(lambda r: {'item': [SortedDict([('value', 1),
-                ('text', "test1")]), SortedDict([('value', 2), ('text',
+        resp = widget(lambda r: {'item': [OrderedDict([('value', 1),
+                ('text', "test1")]), OrderedDict([('value', 2), ('text',
                         "test2")])]})(self.json_request)
         self.assertEqual('{"item": [{"value": 1, "text": "test1"}, '
                 '{"value": 2, "text": "test2"}]}', resp.content)
@@ -426,7 +429,7 @@ class FunnelDecoratorTestCase(TestCase):
     def test_funnel(self):
         widget = funnel(lambda r: self.funnel_data)
         resp = widget(self.request)
-        json = simplejson.loads(resp.content)
+        json = json.loads(resp.content)
         data = {
             'type': 'reverse',
             'percentage': 'hide',
@@ -444,7 +447,7 @@ class FunnelDecoratorTestCase(TestCase):
         })
         widget = funnel(lambda r: sortable_data)
         resp = widget(self.request)
-        json = simplejson.loads(resp.content)
+        json = json.loads(resp.content)
         data = {
             'type': 'reverse',
             'percentage': 'hide',
@@ -479,7 +482,7 @@ class BulletDecoratorTestCase(TestCase):
         widget = bullet(lambda r: self.bullet_data_minimal)
         resp = widget(self.request)
         # Parse
-        data = simplejson.loads(resp.content)
+        data = json.loads(resp.content)
         # Alias for readability
         item = data['item']
         # Tests
@@ -503,7 +506,7 @@ class BulletDecoratorTestCase(TestCase):
 
         resp = widget(self.request)
         # Parse
-        data = simplejson.loads(resp.content)
+        data = json.loads(resp.content)
         # Alias for readability
         item = data['item']
         # Tests

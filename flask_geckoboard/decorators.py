@@ -3,6 +3,7 @@ Geckoboard decorators.
 """
 
 import base64
+import json
 from types import ListType, TupleType
 from xml.dom.minidom import Document
 
@@ -14,17 +15,13 @@ try:
 except ImportError:
     encryption_enabled = False
 
-try:
-    from functools import wraps
-except ImportError:
-    from django.utils.functional import wraps  # Python 2.4 fallback
+from functools import wraps
 
-from django.conf import settings
-from django.http import HttpResponse, HttpResponseForbidden
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.datastructures import SortedDict
-from django.utils.decorators import available_attrs
-from django.utils import simplejson
+from collections import OrderedDict
+
+from flask import abort
+from flask import request
+from flask import current_app as app
 
 
 TEXT_NONE = 0
@@ -44,12 +41,11 @@ class WidgetDecorator(object):
     contain the correct API key, or a 403 Forbidden response is
     returned.
 
-    If the ``encrypted` argument is set to True, then the data will be 
+    If the ``encrypted` argument is set to True, then the data will be
     encrypted using ``GECKOBOARD_PASSWORD`` (JSON only).
     """
     def __new__(cls, *args, **kwargs):
         obj = object.__new__(cls)
-<<<<<<< HEAD
         obj._encrypted = None
         if 'encrypted' in kwargs:
             if not encryption_enabled:
@@ -58,12 +54,10 @@ class WidgetDecorator(object):
                     'This package can be installed manually or by enabling ' + \
                     'the encryption feature during installation.'
                 )
-            obj._encrypted = kwargs.pop('encrypted')        
-=======
+            obj._encrypted = kwargs.pop('encrypted')
         obj._format = None
         if 'format' in kwargs:
             obj._format = kwargs.pop('format')
->>>>>>> 20f5f166c536cf8f3cb5aec116c11297ce34b46e
         obj.data = kwargs
         try:
             return obj(args[0])
@@ -71,23 +65,19 @@ class WidgetDecorator(object):
             return obj
 
     def __call__(self, view_func):
-        def _wrapped_view(request, *args, **kwargs):
-            if not _is_api_key_correct(request):
-                return HttpResponseForbidden("Geckoboard API key incorrect")
-            view_result = view_func(request, *args, **kwargs)
+        @wraps(view_func)
+        def decorated_view(*args, **kwargs):
+            if not _is_api_key_correct():
+                abort(403)
+            view_result = view_func(*args, **kwargs)
             data = self._convert_view_result(view_result)
             try:
                 self.data.update(data)
             except ValueError:
                 self.data = data
-<<<<<<< HEAD
-            content, content_type = _render(request, self.data, self._encrypted)
-=======
-            content, content_type = _render(request, self.data, self._format)
->>>>>>> 20f5f166c536cf8f3cb5aec116c11297ce34b46e
-            return HttpResponse(content, content_type=content_type)
-        wrapper = wraps(view_func, assigned=available_attrs(view_func))
-        return csrf_exempt(wrapper(_wrapped_view))
+            content, content_type = _render(self.data, self._encrypted, self._format)
+            return app.response_class(content, mimetype=content_type)
+        return decorated_view
 
     def _convert_view_result(self, data):
         # Extending classes do view result mangling here.
@@ -132,7 +122,7 @@ class RAGWidgetDecorator(WidgetDecorator):
         for elem in result:
             if not isinstance(elem, (tuple, list)):
                 elem = [elem]
-            item = SortedDict()
+            item = OrderedDict()
             if elem[0] is None:
                 item['value'] = ''
             else:
@@ -164,7 +154,7 @@ class TextWidgetDecorator(WidgetDecorator):
         for elem in result:
             if not isinstance(elem, (tuple, list)):
                 elem = [elem]
-            item = SortedDict()
+            item = OrderedDict()
             item['text'] = elem[0]
             if len(elem) > 1 and elem[1] is not None:
                 item['type'] = elem[1]
@@ -190,7 +180,7 @@ class PieChartWidgetDecorator(WidgetDecorator):
         for elem in result:
             if not isinstance(elem, (tuple, list)):
                 elem = [elem]
-            item = SortedDict()
+            item = OrderedDict()
             item['value'] = elem[0]
             if len(elem) > 1:
                 item['label'] = elem[1]
@@ -217,9 +207,9 @@ class LineChartWidgetDecorator(WidgetDecorator):
     """
 
     def _convert_view_result(self, result):
-        data = SortedDict()
+        data = OrderedDict()
         data['item'] = list(result[0])
-        data['settings'] = SortedDict()
+        data['settings'] = OrderedDict()
 
         if len(result) > 1:
             x_axis = result[1]
@@ -259,10 +249,10 @@ class GeckOMeterWidgetDecorator(WidgetDecorator):
 
     def _convert_view_result(self, result):
         value, min, max = result
-        data = SortedDict()
+        data = OrderedDict()
         data['item'] = value
-        data['max'] = SortedDict()
-        data['min'] = SortedDict()
+        data['max'] = OrderedDict()
+        data['min'] = OrderedDict()
 
         if not isinstance(max, (tuple, list)):
             max = [max]
@@ -299,7 +289,7 @@ class FunnelWidgetDecorator(WidgetDecorator):
     """
 
     def _convert_view_result(self, result):
-        data = SortedDict()
+        data = OrderedDict()
         items = result.get('items', [])
 
         # sort the items in order if so desired
@@ -444,19 +434,18 @@ class BulletWidgetDecorator(WidgetDecorator):
 bullet = BulletWidgetDecorator
 
 
-def _is_api_key_correct(request):
+def _is_api_key_correct():
     """Return whether the Geckoboard API key on the request is correct."""
-    api_key = getattr(settings, 'GECKOBOARD_API_KEY', None)
+    api_key = app.config.get('GECKOBOARD_API_KEY')
     if api_key is None:
         return True
-    auth = request.META.get('HTTP_AUTHORIZATION', '').split()
-    if len(auth) == 2:
-        if auth[0].lower() == 'basic':
-            request_key = base64.b64decode(auth[1]).split(':')[0]
+    auth = request.authorization
+    if auth:
+        if auth.type == 'basic':
+            request_key = base64.b64decode(auth.username).split(':')[0]
             return request_key == api_key
     return False
 
-<<<<<<< HEAD
 def _derive_key_and_iv(password, salt, key_length, iv_length):
     d = d_i = ''
     while len(d) < key_length + iv_length:
@@ -468,44 +457,37 @@ def _encrypt(data):
     """Equivalent to OpenSSL using 256 bit AES in CBC mode"""
     BS = AES.block_size
     pad = lambda s: s + (BS - len(s) % BS) * chr(BS - len(s) % BS) 
-    password = settings.GECKOBOARD_PASSWORD
+    password = app.config.get('GECKOBOARD_PASSWORD')
     salt = Random.new().read(BS - len('Salted__'))
     key, iv = _derive_key_and_iv(password, salt, 32, BS)
     cipher = AES.new(key, AES.MODE_CBC, iv)
     encrypted = 'Salted__' + salt + cipher.encrypt(pad(data))
     return base64.b64encode(encrypted)
 
-def _render(request, data, encrypted):
-    """Render the data to Geckoboard based on the format request parameter."""
-    format = request.POST.get('format', '')
-    if not format:
-        format = request.GET.get('format', '')
-=======
+def _render(data, encrypted, format=None):
+    """
+    Render the data to Geckoboard. If the `format` parameter is passed
+    to the widget it defines the output format. Otherwise the output
+    format is based on the `format` request parameter.
 
-def _render(request, data, format=None):
-    """Render the data to Geckoboard based on the format request parameter or the format argument supplied to the decorator. Default to XML"""
-    if format:
-        if format == "json":
-            return _render_json(data)
-        else:
-            return _render_xml(data)
-    else:
-        format = request.POST.get('format', '')
-        if not format:
-            format = request.GET.get('format', '')
->>>>>>> 20f5f166c536cf8f3cb5aec116c11297ce34b46e
-    if format == '2':
+    A `format` paramater of ``json`` or ``2`` renders JSON output, any
+    other value renders XML.
+    """
+    format = request.args.get('format', '')
+    if format == 'json' or format == '2':
         return _render_json(data, encrypted)
     else:
-        return _render_xml(data)
+        return _render_xml(data, encrypted)
 
 def _render_json(data, encrypted=False):
-    data_json = simplejson.dumps(data)
+    data_json = json.dumps(data)
     if encrypted:
         data_json = _encrypt(data_json)
     return data_json, 'application/json'
 
-def _render_xml(data):
+def _render_xml(data, encrypted=False):
+    if encrypted:
+        raise ValueError("encryption requested for XML output but unsupported")
     doc = Document()
     root = doc.createElement('root')
     doc.appendChild(root)
