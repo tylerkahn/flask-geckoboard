@@ -15,7 +15,7 @@ def build_long_description():
 
 
 setup(
-    name = 'flask-geckoboard',
+    name = 'Flask-Geckoboard',
     version = flask_geckoboard.__version__,
     license = flask_geckoboard.__license__,
     description = 'Geckoboard custom widgets for Flask projects',
@@ -26,6 +26,9 @@ setup(
         'flask_geckoboard',
         'tests',
     ],
+    install_requires = (
+        'flask'
+    ),
     extras_require = {
         'encryption': ['pycrypto']
     },

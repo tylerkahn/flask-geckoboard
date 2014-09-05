@@ -357,9 +357,9 @@ http://support.geckoboard.com/entries/274940-custom-chart-widget-type-definition
 .. _`Geckoboard API`: http://geckoboard.zendesk.com/forums/207979-geckoboard-api
 """
 
-import decorators
 
 class Geckoboard(object):
+    import decorators
     app = None
     bullet = decorators.bullet
     funnel = decorators.funnel
