@@ -320,12 +320,11 @@ class BulletWidgetDecorator(WidgetDecorator):
     Optional keys:
     orientation:    One of 'horizontal' or 'vertical'. Defaults to horizontal.
     sublabel:       Appears below main label.
-    red:            Red start and end, eg. [0,100]. Defaults are calculated
-                    from axis_points.
-    amber:          Amber start and end, eg. [0,100]. Defaults are calculated
-                    from axis_points.
-    green:          Green start and end, eg. [0,100]. Defaults are calculated
-                    from axis_points.
+    range:          Ordered list of color ranges:
+                    [{'color': 'red', 'start': 0, 'end': 1},
+                     {'color': 'amber', 'start': 1, 'end': 5},
+                     {'color': 'green', 'start': 5, 'end': 10}]
+                    Defaults are calculated from axis_points.
     projected:      Projected value range, eg. 900 or [100, 900]. A singleton
                     900 is internally converted to [0, 900].
 
@@ -353,19 +352,25 @@ class BulletWidgetDecorator(WidgetDecorator):
 
         # If red, amber and green are not *all* supplied calculate defaults
         axis_points = result['axis_points']
-        red = result.get('red', None)
-        amber = result.get('amber', None)
-        green = result.get('green', None)
-        if (red is None) or (amber is None) or (green is None):
+        _range = result.get('range', [])
+        if not _range:
             if axis_points:
                 max_point = max(axis_points)
                 min_point = min(axis_points)
                 third = (max_point - min_point) / 3
-                red = (min_point, min_point + third - 1)
-                amber = (min_point + third, max_point - third - 1)
-                green = (max_point - third, max_point)
+                range.append({'color': 'red',
+                              'start': min_point,
+                              'end': min_point + third - 1})
+                range.append({'color': 'amber',
+                              'start': min_point + third,
+                              'end': max_point - third - 1})
+                range.append({'color': 'red',
+                              'start': max_point - third,
+                              'end': max_point})
             else:
-                red = amber = green = (0, 0)
+                _range = [{'color': 'red', 'start': 0, 'end': 0},
+                          {'color': 'amber', 'start': 0, 'end': 0},
+                          {'color': 'green', 'start': 0, 'end': 0}]
 
         # Scan axis points for largest value and scale to avoid overflow in
         # Geckoboard's UI.
@@ -411,11 +416,7 @@ class BulletWidgetDecorator(WidgetDecorator):
             item=dict(
                 label=result['label'],
                 axis=dict(point=axis_points),
-                range=dict(
-                    red=dict(start=red[0], end=red[1]),
-                    amber=dict(start=amber[0], end=amber[1]),
-                    green=dict(start=green[0], end=green[1])
-                ),
+                range=_range,
                 measure=dict(current=dict(start=current[0], end=current[1])),
                 comparative=dict(point=result['comparative'])
             )
