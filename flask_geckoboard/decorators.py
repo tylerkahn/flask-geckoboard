@@ -334,102 +334,104 @@ class BulletWidgetDecorator(WidgetDecorator):
                     is suffixed with that information. Default is true.
     """
 
-    def _convert_view_result(self, result):
+    def _convert_view_result(self, results):
         # Check required keys. We do not do type checking since this level of
         # competence is assumed.
-        for key in ('label', 'axis_points', 'current', 'comparative'):
-            if not result.has_key(key):
-                raise RuntimeError, "Key %s is required" % key
+        if not isinstance(results, list):
+            results = [results]
+        items = []
+        for result in results:
+            for key in ('label', 'axis_points', 'current', 'comparative'):
+                if not result.has_key(key):
+                    raise RuntimeError, "Key %s is required" % key
 
-        # Handle singleton current and projected
-        current = result['current']
-        projected = result.get('projected', None)
-        if not isinstance(current, (ListType, TupleType)):
-            current = [0, current]
-        if (projected is not None) and not isinstance(projected, (ListType,
-                TupleType)):
-            projected = [0, projected]
+            # Handle singleton current and projected
+            current = result['current']
+            projected = result.get('projected', None)
+            if not isinstance(current, (ListType, TupleType)):
+                current = [0, current]
+            if (projected is not None) and not isinstance(projected, (ListType,
+                    TupleType)):
+                projected = [0, projected]
 
-        # If red, amber and green are not *all* supplied calculate defaults
-        axis_points = result['axis_points']
-        _range = result.get('range', [])
-        if not _range:
-            if axis_points:
-                max_point = max(axis_points)
-                min_point = min(axis_points)
-                third = (max_point - min_point) / 3
-                range.append({'color': 'red',
-                              'start': min_point,
-                              'end': min_point + third - 1})
-                range.append({'color': 'amber',
-                              'start': min_point + third,
-                              'end': max_point - third - 1})
-                range.append({'color': 'red',
-                              'start': max_point - third,
-                              'end': max_point})
-            else:
-                _range = [{'color': 'red', 'start': 0, 'end': 0},
-                          {'color': 'amber', 'start': 0, 'end': 0},
-                          {'color': 'green', 'start': 0, 'end': 0}]
-
-        # Scan axis points for largest value and scale to avoid overflow in
-        # Geckoboard's UI.
-        auto_scale = result.get('auto_scale', True)
-        if auto_scale and axis_points:
-            scale_label_map = {1000000000: 'billions', 1000000: 'millions',
-                    1000: 'thousands'}
-            scale = 1
-            value = max(axis_points)
-            for n in (1000000000, 1000000, 1000):
-                if value >= n:
-                    scale = n
-                    break
-
-            # Little fixedpoint helper.
-            # todo: use a fixedpoint library
-            def scaler(value, scale):
-                return float('%.2f' % (value*1.0 / scale))
-
-            # Apply scale to all values
-            if scale > 1:
-                axis_points = [scaler(v, scale) for v in axis_points]
-                current = (scaler(current[0], scale), scaler(current[1], scale))
-                if projected is not None:
-                    projected = (scaler(projected[0], scale),
-                            scaler(projected[1], scale))
-                red = (scaler(red[0], scale), scaler(red[1], scale))
-                amber = (scaler(amber[0], scale), scaler(amber[1], scale))
-                green = (scaler(green[0], scale), scaler(green[1], scale))
-                result['comparative'] = scaler(result['comparative'], scale)
-
-                # Suffix sublabel
-                sublabel = result.get('sublabel', '')
-                if sublabel:
-                    result['sublabel'] = '%s (%s)' % \
-                            (sublabel, scale_label_map[scale])
+            # If red, amber and green are not *all* supplied calculate defaults
+            axis_points = result['axis_points']
+            _range = result.get('range', [])
+            if not _range:
+                if axis_points:
+                    max_point = max(axis_points)
+                    min_point = min(axis_points)
+                    third = (max_point - min_point) / 3
+                    range.append({'color': 'red',
+                                  'start': min_point,
+                                  'end': min_point + third - 1})
+                    range.append({'color': 'amber',
+                                  'start': min_point + third,
+                                  'end': max_point - third - 1})
+                    range.append({'color': 'red',
+                                  'start': max_point - third,
+                                  'end': max_point})
                 else:
-                    result['sublabel'] = scale_label_map[scale].capitalize()
+                    _range = [{'color': 'red', 'start': 0, 'end': 0},
+                              {'color': 'amber', 'start': 0, 'end': 0},
+                              {'color': 'green', 'start': 0, 'end': 0}]
 
-        # Assemble structure
-        data = dict(
-            orientation=result.get('orientation', 'horizontal'),
-            item=dict(
+            # Scan axis points for largest value and scale to avoid overflow in
+            # Geckoboard's UI.
+            auto_scale = result.get('auto_scale', True)
+            if auto_scale and axis_points:
+                scale_label_map = {1000000000: 'billions', 1000000: 'millions',
+                        1000: 'thousands'}
+                scale = 1
+                value = max(axis_points)
+                for n in (1000000000, 1000000, 1000):
+                    if value >= n:
+                        scale = n
+                        break
+
+                # Little fixedpoint helper.
+                # todo: use a fixedpoint library
+                def scaler(value, scale):
+                    return float('%.2f' % (value*1.0 / scale))
+
+                # Apply scale to all values
+                if scale > 1:
+                    axis_points = [scaler(v, scale) for v in axis_points]
+                    current = (scaler(current[0], scale), scaler(current[1], scale))
+                    if projected is not None:
+                        projected = (scaler(projected[0], scale),
+                                scaler(projected[1], scale))
+                    red = (scaler(red[0], scale), scaler(red[1], scale))
+                    amber = (scaler(amber[0], scale), scaler(amber[1], scale))
+                    green = (scaler(green[0], scale), scaler(green[1], scale))
+                    result['comparative'] = scaler(result['comparative'], scale)
+
+                    # Suffix sublabel
+                    sublabel = result.get('sublabel', '')
+                    if sublabel:
+                        result['sublabel'] = '%s (%s)' % \
+                                (sublabel, scale_label_map[scale])
+                    else:
+                        result['sublabel'] = scale_label_map[scale].capitalize()
+
+            # Assemble structure
+            data = dict(
                 label=result['label'],
                 axis=dict(point=axis_points),
                 range=_range,
                 measure=dict(current=dict(start=current[0], end=current[1])),
-                comparative=dict(point=result['comparative'])
-            )
-        )
+                comparative=dict(point=result['comparative']))
 
-        # Add optional items
-        if result.has_key('sublabel'):
-            data['item']['sublabel'] = result['sublabel']
-        if projected is not None:
-            data['item']['measure']['projected'] = dict(start=projected[0],
-                    end=projected[1])
+            # Add optional items
+            if result.has_key('sublabel'):
+                data['sublabel'] = result['sublabel']
+            if projected is not None:
+                data['measure']['projected'] = dict(start=projected[0],
+                        end=projected[1])
 
-        return data
+            items.append(data)
+        return dict(item=items,
+                    orientation=result.get('orientation', 'horizontal'),)
 
 bullet = BulletWidgetDecorator
 
