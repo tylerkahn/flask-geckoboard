@@ -341,7 +341,7 @@ class BulletWidgetDecorator(WidgetDecorator):
             results = [results]
         items = []
         for result in results:
-            for key in ('label', 'axis_points', 'current', 'comparative'):
+            for key in ('label', 'axis_points', 'current'):
                 if not result.has_key(key):
                     raise RuntimeError, "Key %s is required" % key
 
@@ -404,7 +404,8 @@ class BulletWidgetDecorator(WidgetDecorator):
                     red = (scaler(red[0], scale), scaler(red[1], scale))
                     amber = (scaler(amber[0], scale), scaler(amber[1], scale))
                     green = (scaler(green[0], scale), scaler(green[1], scale))
-                    result['comparative'] = scaler(result['comparative'], scale)
+                    if 'comparative' in result:
+                        result['comparative'] = scaler(result['comparative'], scale)
 
                     # Suffix sublabel
                     sublabel = result.get('sublabel', '')
@@ -419,8 +420,9 @@ class BulletWidgetDecorator(WidgetDecorator):
                 label=result['label'],
                 axis=dict(point=axis_points),
                 range=_range,
-                measure=dict(current=dict(start=current[0], end=current[1])),
-                comparative=dict(point=result['comparative']))
+                measure=dict(current=dict(start=current[0], end=current[1])))
+            if 'comparative' in result:
+                data['comparative'] = dict(point=result['comparative'])
 
             # Add optional items
             if result.has_key('sublabel'):
