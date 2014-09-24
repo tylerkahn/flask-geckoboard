@@ -1,6 +1,10 @@
 Changelog
 =========
 
+Version 0.2.1
+-------------
+* Make `comparative` field in Bullet Widget optional.
+
 Version 0.2.0
 -------------
 * Bug fix in Bullet Widget.

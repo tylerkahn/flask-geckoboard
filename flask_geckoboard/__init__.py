@@ -384,6 +384,6 @@ class Geckoboard(object):
 
 __author__ = "Rob Eroh"
 __email__ = "rob@eroh.me"
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __copyright__ = "Copyright (C) 2011-2014 Rob Eroh and others"
 __license__ = "MIT License"
