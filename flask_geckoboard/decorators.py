@@ -237,8 +237,8 @@ line_chart = LineChartWidgetDecorator
 class NewLineChartWidgetDecorator(WidgetDecorator):
     def _convert_view_result(self, result):
         data = OrderedDict()
-        data['series'] = OrderedDict()
-        data['series']['data'] = list(result[0])
+        data['series'] = [OrderedDict()]
+        data['series'][0]['data'] = list(result[0])
 
         if len(result) > 1:
             data['x_axis'] = OrderedDict()
