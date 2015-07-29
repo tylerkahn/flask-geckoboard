@@ -34,7 +34,7 @@ visiting the widget URL.
 Encryption
 ==========
 
-Geckoboard encryption allows encrypting data before it is sent to Geckoboard's 
+Geckoboard encryption allows encrypting data before it is sent to Geckoboard's
 servers. After entering the password used to encrypt the data when the Geckoboard
 is loaded, the data will be decrypted in the browser.
 
@@ -112,8 +112,8 @@ Widget type
 
 Feed format
     Either *XML* or *JSON*.  If you don't specify a format the decorators will
-    automatically detect and output the correct format or default to XML 
-    if this is not enabled (by default the format isn't appended by 
+    automatically detect and output the correct format or default to XML
+    if this is not enabled (by default the format isn't appended by
     Geckoboard as a parameter any more)
 
 Request type
@@ -365,6 +365,7 @@ class Geckoboard(object):
     funnel = decorators.funnel
     geck_o_meter = decorators.geck_o_meter
     line_chart = decorators.line_chart
+    new_line_chart = decorators.new_line_chart
     pie_chart = decorators.pie_chart
     text = decorators.text_widget
     rag = decorators.rag_widget
