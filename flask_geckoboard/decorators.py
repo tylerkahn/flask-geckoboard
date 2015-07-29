@@ -234,6 +234,35 @@ class LineChartWidgetDecorator(WidgetDecorator):
 line_chart = LineChartWidgetDecorator
 
 
+class NewLineChartWidgetDecorator(WidgetDecorator):
+    def _convert_view_result(self, result):
+        data = OrderedDict()
+        data['series'] = OrderedDict()
+        data['x_axis'] = OrderedDict()
+        data['y_axis'] = OrderedDict()
+        data['series']['data'] = list(result[0])
+
+        if len(result) > 1:
+            x_axis = result[1]
+            if x_axis is None:
+                x_axis = ''
+            if not isinstance(x_axis, (tuple, list)):
+                x_axis = [x_axis]
+            data['x_axis']['labels'] = x_axis
+
+        if len(result) > 2:
+            y_axis = result[2]
+            if y_axis is None:
+                y_axis = ''
+            if not isinstance(y_axis, (tuple, list)):
+                y_axis = [y_axis]
+            data['yaxis']['labels'] = y_axis
+
+        return data
+
+new_line_chart = NewLineChartWidgetDecorator
+
+
 class GeckOMeterWidgetDecorator(WidgetDecorator):
     """
     Geckoboard Geck-O-Meter decorator.
