@@ -237,12 +237,11 @@ line_chart = LineChartWidgetDecorator
 class NewLineChartWidgetDecorator(WidgetDecorator):
     def _convert_view_result(self, result):
         data = OrderedDict()
-        data['x_axis'] = OrderedDict()
-        data['y_axis'] = OrderedDict()
         data['series'] = OrderedDict()
         data['series']['data'] = list(result[0])
 
         if len(result) > 1:
+            data['x_axis'] = OrderedDict()
             x_axis = result[1]
             if x_axis is None:
                 x_axis = ''
@@ -251,6 +250,7 @@ class NewLineChartWidgetDecorator(WidgetDecorator):
             data['x_axis']['labels'] = x_axis
 
         if len(result) > 2:
+            data['y_axis'] = OrderedDict()
             y_axis = result[2]
             if y_axis is None:
                 y_axis = ''
