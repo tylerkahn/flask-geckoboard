@@ -256,7 +256,7 @@ class NewLineChartWidgetDecorator(WidgetDecorator):
                 y_axis = ''
             if not isinstance(y_axis, (tuple, list)):
                 y_axis = [y_axis]
-            data['yaxis']['labels'] = y_axis
+            data['y_axis']['labels'] = y_axis
 
         return data
 
