@@ -364,8 +364,8 @@ class Geckoboard(object):
     bullet = decorators.bullet
     funnel = decorators.funnel
     geck_o_meter = decorators.geck_o_meter
+    line_chart_legacy = decorators.line_chart_legacy
     line_chart = decorators.line_chart
-    new_line_chart = decorators.new_line_chart
     pie_chart = decorators.pie_chart
     text = decorators.text_widget
     rag = decorators.rag_widget

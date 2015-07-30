@@ -191,9 +191,9 @@ class PieChartWidgetDecorator(WidgetDecorator):
 pie_chart = PieChartWidgetDecorator
 
 
-class LineChartWidgetDecorator(WidgetDecorator):
+class LineChartLegacyWidgetDecorator(WidgetDecorator):
     """
-    Geckoboard Line chart decorator.
+    Geckoboard Line chart (legacy) decorator.
 
     The decorated view must return a tuple `(values, x_axis, y_axis,
     [color])`.  The `values` parameter is a list of data points.  The
@@ -231,10 +231,26 @@ class LineChartWidgetDecorator(WidgetDecorator):
 
         return data
 
-line_chart = LineChartWidgetDecorator
+line_chart_legacy = LineChartLegacyWidgetDecorator
 
 
-class NewLineChartWidgetDecorator(WidgetDecorator):
+class LineChartWidgetDecorator(WidgetDecorator):
+    """
+    Geckoboard Line chart decorator.
+
+    The decorated view must return a dict that contains at least an
+    `series` entry with a list of the data to be plotted.
+
+    Optional keys:
+
+        x_axis: A list with the x-axis labels.
+        y_axis: A list with the x-axis labels.
+        x_type: The x-axis type (e.g. "datetime").
+
+    Other options are in development.
+    See https://developer.geckoboard.com/#line-chart for more information.
+
+    """
     def _convert_view_result(self, result):
         data = OrderedDict()
         if 'series' not in result:
@@ -264,7 +280,7 @@ class NewLineChartWidgetDecorator(WidgetDecorator):
 
         return data
 
-new_line_chart = NewLineChartWidgetDecorator
+line_chart = LineChartWidgetDecorator
 
 
 class GeckOMeterWidgetDecorator(WidgetDecorator):
