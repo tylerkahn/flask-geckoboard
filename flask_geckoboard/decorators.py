@@ -237,10 +237,12 @@ line_chart = LineChartWidgetDecorator
 class NewLineChartWidgetDecorator(WidgetDecorator):
     def _convert_view_result(self, result):
         data = OrderedDict()
+        if 'series' not in result:
+            raise RuntimeError, 'Key "series" is required'
         data['series'] = [OrderedDict()]
-        data['series'][0]['data'] = list(result[0])
+        data['series'][0]['data'] = list(result['series'])
 
-        if len(result) > 1:
+        if 'x_axis' in result:
             data['x_axis'] = OrderedDict()
             x_axis = result[1]
             if x_axis is None:
@@ -248,8 +250,10 @@ class NewLineChartWidgetDecorator(WidgetDecorator):
             if not isinstance(x_axis, (tuple, list)):
                 x_axis = [x_axis]
             data['x_axis']['labels'] = x_axis
+            if 'x_type' in result:
+                data['x_axis']['type'] = result['x_type']
 
-        if len(result) > 2:
+        if 'y_axis' in result:
             data['y_axis'] = OrderedDict()
             y_axis = result[2]
             if y_axis is None:
