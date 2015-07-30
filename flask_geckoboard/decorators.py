@@ -256,7 +256,7 @@ class LineChartWidgetDecorator(WidgetDecorator):
         if not isinstance(result['series'], list) or 'series' not in result:
             raise RuntimeError, 'Key "series" (list) is required'
         for s in result.get('series'):
-            if not isinstance('data', list) or 'data' not in s:
+            if not isinstance(s, dict) or 'data' not in s:
                 raise RuntimeError, 'Series must contain "data" entry'
         data['series'] = result.get('series')
 
