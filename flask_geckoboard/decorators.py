@@ -253,8 +253,8 @@ class LineChartWidgetDecorator(WidgetDecorator):
     """
     def _convert_view_result(self, result):
         data = OrderedDict()
-        if not isinstance(result, list) or 'series' not in result:
-            raise RuntimeError, 'Key "series" is required'
+        if not isinstance(result['series'], list) or 'series' not in result:
+            raise RuntimeError, 'Key "series" (list) is required'
         for s in result.get('series'):
             if not isinstance('data', dict) or 'data' not in s:
                 raise RuntimeError, 'Series must contain "data" entry'
