@@ -238,45 +238,33 @@ class LineChartWidgetDecorator(WidgetDecorator):
     """
     Geckoboard Line chart decorator.
 
-    The decorated view must return a dict that contains at least an
-    `series` entry with a list of the data to be plotted.
+    The decorated view must return a dict that contains at least a
+    `series` entry which must be a list of dicts (one for each line) each
+    containing a `data` entry with a list of the data to be plotted.
 
     Optional keys:
 
-        x_axis: A list with the x-axis labels.
-        y_axis: A list with the x-axis labels.
-        x_type: The x-axis type (e.g. "datetime").
+        x_axis: A dict with a `labels` entry for the x-axis labels.
+        y_axis: A dict with a `labels` entry for the y-axis labels.
 
-    Other options are in development.
+    The `series`, `x_axis`, and `y_axis` entries can have other optional keys.
     See https://developer.geckoboard.com/#line-chart for more information.
 
     """
     def _convert_view_result(self, result):
         data = OrderedDict()
-        if 'series' not in result:
+        if not isinstance(result, list) or 'series' not in result:
             raise RuntimeError, 'Key "series" is required'
-        data['series'] = [OrderedDict()]
-        data['series'][0]['data'] = list(result['series'])
+        for s in result.get('series'):
+            if not isinstance('data', dict) or 'data' not in s:
+                raise RuntimeError, 'Series must contain "data" entry'
+        data['series'] = result.get('series')
 
         if 'x_axis' in result:
-            data['x_axis'] = OrderedDict()
-            x_axis = result['x_axis']
-            if x_axis is None:
-                x_axis = ''
-            if not isinstance(x_axis, (tuple, list)):
-                x_axis = [x_axis]
-            data['x_axis']['labels'] = x_axis
-            if 'x_type' in result:
-                data['x_axis']['type'] = result['x_type']
+            data['x_axis'] = result.get('x_axis')
 
         if 'y_axis' in result:
-            data['y_axis'] = OrderedDict()
-            y_axis = result['y_axis']
-            if y_axis is None:
-                y_axis = ''
-            if not isinstance(y_axis, (tuple, list)):
-                y_axis = [y_axis]
-            data['y_axis']['labels'] = y_axis
+            data['y_axis'] = result.get('x_axis')
 
         return data
 
