@@ -244,7 +244,7 @@ class NewLineChartWidgetDecorator(WidgetDecorator):
 
         if 'x_axis' in result:
             data['x_axis'] = OrderedDict()
-            x_axis = result[1]
+            x_axis = result['x_axis']
             if x_axis is None:
                 x_axis = ''
             if not isinstance(x_axis, (tuple, list)):
@@ -255,7 +255,7 @@ class NewLineChartWidgetDecorator(WidgetDecorator):
 
         if 'y_axis' in result:
             data['y_axis'] = OrderedDict()
-            y_axis = result[2]
+            y_axis = result['y_axis']
             if y_axis is None:
                 y_axis = ''
             if not isinstance(y_axis, (tuple, list)):
