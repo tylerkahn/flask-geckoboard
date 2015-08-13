@@ -475,6 +475,28 @@ class BulletWidgetDecorator(WidgetDecorator):
 bullet = BulletWidgetDecorator
 
 
+class LeaderboardWidgetDecorator(WidgetDecorator):
+    """
+    Leaderboard decorator.
+
+    """
+
+    def _convert_view_result(self, result):
+        data = OrderedDict()
+
+        zipped = zip(*result)
+        if len(result) > 2:
+            items = [{'label': x[0], 'value': x[1],
+                      'previous_rank': x[2]} for x in zipped]
+        else:
+            items = [{'label': x[0], 'value': x[1]} for x in zipped]
+        # Sort the items by value
+        data['items'] = sorted(items, key=lambda k: k['value'])
+        return data
+
+leaderboard = LeaderboardWidgetDecorator
+
+
 def _is_api_key_correct():
     """Return whether the Geckoboard API key on the request is correct."""
     api_key = app.config.get('GECKOBOARD_API_KEY')
