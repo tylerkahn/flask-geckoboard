@@ -496,6 +496,7 @@ class LeaderboardWidgetDecorator(WidgetDecorator):
 
     def _convert_view_result(self, result):
         data = OrderedDict()
+        sort_arg = 'descending'
         if len(result) > 3:
             sort_arg = result[-1]
             result = result[:-1]
