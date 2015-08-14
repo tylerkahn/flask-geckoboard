@@ -479,6 +479,19 @@ class LeaderboardWidgetDecorator(WidgetDecorator):
     """
     Leaderboard decorator.
 
+    The decorated view must return a tuple that looks like the following:
+
+        (labels, values, previous_ranks, 'ascending')
+
+    The first three entries are lists with the corresponding labels, values, and
+    previous rank in the leaderboard. If 'ascending' is provided as the last
+    entry, the leaderboard is sorted in ascending order, else descending.
+
+    The only required entries are labels and values, hence the minimal returned
+    tuple must be like this:
+
+        (labels, values)
+
     """
 
     def _convert_view_result(self, result):
@@ -491,7 +504,11 @@ class LeaderboardWidgetDecorator(WidgetDecorator):
         else:
             items = [{'label': x[0], 'value': x[1]} for x in zipped]
         # Sort the items by value
-        data['items'] = sorted(items, key=lambda k: k['value'], reverse=True)
+        if len(result) > 3 and result[3] == 'ascending':
+            data['items'] = sorted(items, key=lambda k: k['value'])
+        else:
+            data['items'] = sorted(items, key=lambda k: k['value'],
+                                   reverse=True)
         return data
 
 leaderboard = LeaderboardWidgetDecorator
