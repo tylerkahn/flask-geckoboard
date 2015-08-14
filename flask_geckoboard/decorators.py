@@ -491,7 +491,7 @@ class LeaderboardWidgetDecorator(WidgetDecorator):
         else:
             items = [{'label': x[0], 'value': x[1]} for x in zipped]
         # Sort the items by value
-        data['items'] = sorted(items, key=lambda k: k['value'])
+        data['items'] = sorted(items, key=lambda k: k['value'], reverse=True)
         return data
 
 leaderboard = LeaderboardWidgetDecorator
