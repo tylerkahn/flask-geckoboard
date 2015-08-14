@@ -496,7 +496,9 @@ class LeaderboardWidgetDecorator(WidgetDecorator):
 
     def _convert_view_result(self, result):
         data = OrderedDict()
-
+        if len(result) > 3:
+            sort_arg = result[-1]
+            result = result[:-1]
         zipped = zip(*result)
         if len(result) > 2:
             items = [{'label': x[0], 'value': x[1],
@@ -504,7 +506,7 @@ class LeaderboardWidgetDecorator(WidgetDecorator):
         else:
             items = [{'label': x[0], 'value': x[1]} for x in zipped]
         # Sort the items by value
-        if len(result) > 3 and result[3] == 'ascending':
+        if sort_arg == 'ascending':
             data['items'] = sorted(items, key=lambda k: k['value'])
         else:
             data['items'] = sorted(items, key=lambda k: k['value'],
