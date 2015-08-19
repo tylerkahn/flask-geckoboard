@@ -381,9 +381,6 @@ class Geckoboard(object):
         self.password = app.config.get('GECKOBOARD_PASSWORD')
         self.app = app
 
-
-
-
 __author__ = "Rob Eroh"
 __email__ = "rob@eroh.me"
 __version__ = "0.2.1"
