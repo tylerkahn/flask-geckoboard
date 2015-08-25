@@ -1,6 +1,8 @@
 """ Geckoboard decorators. """
 
 import base64
+from collections import OrderedDict
+from functools import wraps
 import json
 from types import ListType, TupleType
 
@@ -12,14 +14,8 @@ try:
 except ImportError:
     encryption_enabled = False
 
-from functools import wraps
-
-from collections import OrderedDict
-
-from flask import abort
-from flask import request
+from flask import abort, request
 from flask import current_app as app
-
 
 TEXT_NONE = 0
 TEXT_INFO = 2
