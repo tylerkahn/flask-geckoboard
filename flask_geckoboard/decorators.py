@@ -267,6 +267,43 @@ class LineChartWidgetDecorator(WidgetDecorator):
 line_chart = LineChartWidgetDecorator
 
 
+class BarChartWidgetDecorator(WidgetDecorator):
+    """
+    Geckoboard Bar chart decorator.
+
+    The decorated view must return a dict that contains at least a
+    `series` entry which must be a list  containing a single `data` entry
+    with a list of datapoints to be plotted.
+
+    Optional keys:
+
+        x_axis: A dict with a `labels` entry for the x-axis labels.
+        y_axis: A dict with a `labels` entry for the y-axis labels.
+
+    The `series`, `x_axis`, and `y_axis` entries can have other optional keys.
+    See https://developer.geckoboard.com/#bar-chart for more information.
+
+    """
+    def _convert_view_result(self, result):
+        data = OrderedDict()
+        if not isinstance(result['series'], list) or 'series' not in result:
+            raise RuntimeError('Key "series" (list) is required')
+        for s in result.get('series'):
+            if not isinstance(s, dict) or 'data' not in s:
+                raise RuntimeError('Series must contain "data" entry')
+        data['series'] = result.get('series')
+
+        if 'x_axis' in result:
+            data['x_axis'] = result.get('x_axis')
+
+        if 'y_axis' in result:
+            data['y_axis'] = result.get('x_axis')
+
+        return data
+
+bar = BarChartWidgetDecorator
+
+
 class GeckOMeterWidgetDecorator(WidgetDecorator):
     """
     Geckoboard Geck-O-Meter decorator.

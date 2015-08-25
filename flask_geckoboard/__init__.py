@@ -361,6 +361,7 @@ http://support.geckoboard.com/entries/274940-custom-chart-widget-type-definition
 class Geckoboard(object):
     import decorators
     app = None
+    bar = decorators.bar
     bullet = decorators.bullet
     funnel = decorators.funnel
     geck_o_meter = decorators.geck_o_meter
