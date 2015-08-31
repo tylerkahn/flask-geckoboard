@@ -359,19 +359,16 @@ http://support.geckoboard.com/entries/274940-custom-chart-widget-type-definition
 
 
 class Geckoboard(object):
-    import decorators
     app = None
-    bar = decorators.bar
-    bullet = decorators.bullet
-    funnel = decorators.funnel
-    geck_o_meter = decorators.geck_o_meter
-    leaderboard = decorators.leaderboard
-    line_chart_legacy = decorators.line_chart_legacy
-    line_chart = decorators.line_chart
-    pie_chart = decorators.pie_chart
-    text = decorators.text_widget
-    rag = decorators.rag_widget
-    number = decorators.number_widget
+    from .decorators import bar, bullet, funnel
+    from .decorators import geck_o_meter
+    from .decorators import leaderboard
+    from .decorators import line_chart_legacy
+    from .decorators import line_chart
+    from .decorators import pie_chart
+    from .decorators import text_widget as text
+    from .decorators import rag_widget as rag
+    from .decorators import number_widget as number
 
     def __init__(self, app=None):
         if app:

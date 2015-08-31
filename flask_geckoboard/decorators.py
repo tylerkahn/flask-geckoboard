@@ -4,7 +4,6 @@ import base64
 from collections import OrderedDict
 from functools import wraps
 import json
-from types import ListType, TupleType
 
 try:
     from Crypto.Cipher import AES
@@ -415,10 +414,10 @@ class BulletWidgetDecorator(WidgetDecorator):
             # Handle singleton current and projected
             current = result['current']
             projected = result.get('projected', None)
-            if not isinstance(current, (ListType, TupleType)):
+            if not isinstance(current, (list, tuple)):
                 current = [0, current]
             if (projected is not None) and not isinstance(
-                    projected, (ListType, TupleType)):
+                    projected, (list, tuple)):
                 projected = [0, projected]
 
             # If red, amber and green are not *all* supplied calculate defaults
